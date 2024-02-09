@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+src/wh1tem0cha/__init__.py
+src/wh1tem0cha/wh1tem0cha.py
+src/wh1tem0cha.egg-info/PKG-INFO
+src/wh1tem0cha.egg-info/SOURCES.txt
+src/wh1tem0cha.egg-info/dependency_links.txt
+src/wh1tem0cha.egg-info/top_level.txt
