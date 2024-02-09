@@ -7,7 +7,7 @@ Author: CYB3RMX
 Author-email: cyb3rmx0@gmail.com
 Project-URL: Bug Tracker, https://github.com/CYB3RMX/Wh1teM0cha/issues
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: GPL-3.0 license
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
