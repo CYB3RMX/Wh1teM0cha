@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: wh1tem0cha
-Version: 0.0.1
+Version: 0.1
 Summary: Python Module for Parsing & Reverse Engineering Mach-O Executables.
 Home-page: https://github.com/CYB3RMX/Wh1teM0cha
 Author: CYB3RMX

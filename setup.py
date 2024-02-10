@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="wh1tem0cha",
-    version="0.0.1",
+    version="0.1",
     author="CYB3RMX",
     author_email="cyb3rmx0@gmail.com",
     description="Python Module for Parsing & Reverse Engineering Mach-O Executables.",
