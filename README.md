@@ -1,6 +1,11 @@
 # Wh1teM0cha
 <img src="https://img.shields.io/badge/-Python-black?style=for-the-badge&logo=python&logoColor=white">
-<br><b>Python Module for Parsing/Reverse Engineering Mach-O Executables.</b><br>
+<p align="center">
+<img src="https://github.com/CYB3RMX/Wh1teM0cha/assets/61325408/322d3083-cb78-4630-ae71-1ae33f5dc543" width="400" style="margin=auto;">
+  <br>
+<br><b>Python Module for Parsing & Reverse Engineering Mach-O Executables.</b><br>
+</p>
+<br>
 
 # Installation
 - <i>You can simply run this command.</i>
