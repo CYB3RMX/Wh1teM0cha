@@ -8,6 +8,7 @@ import re
 import struct
 import hashlib
 import binascii
+import lxml.etree as ET
 
 # Header => first 4 bytes
 header_dict = {
@@ -430,6 +431,89 @@ class Wh1teM0cha:
             return self._extracted_strings
         else:
             return []
+
+    def dump_sc_superblob(self):
+        """
+            Description: This method is for dumping _SC_SuperBlob
+            Usage: wm.dump_sc_superblob()
+        """
+        header_superblob = b'\xfa\xde\x0c\xc0'
+
+        # 1 find superblob header
+        sb_offset = list(re.finditer(header_superblob, self._target_binary_buffer))[-1].start()
+
+        # Get length
+        self._fhandler.seek(sb_offset)
+        buffer = self._fhandler.read(16)
+        blob_length = binascii.hexlify(buffer)[8:16]
+
+        # Read sizeof(blob)
+        self._fhandler.seek(sb_offset)
+        sc_superblob_data = self._fhandler.read(int(blob_length, 16))
+        return sc_superblob_data
+
+    def get_plists(self):
+        """
+            Description: This method is for dumping .plist data from _SC_SuperBlob
+            Usage: wm.get_plists()
+        """
+        plist_header = b"<\?xml"
+        plist_footer = b"<\/plist>"
+
+        # Dump superblob
+        spblb_data = self.dump_sc_superblob()
+
+        # Find headers first
+        xmlstart = list(re.finditer(plist_header, spblb_data))
+
+        # After that we also need to find footers as well
+        xmlend = list(re.finditer(plist_footer, spblb_data))
+
+        if (xmlstart and xmlend) and (len(xmlstart) == len(xmlend)):
+            plist_array = []
+            for start, end in zip(xmlstart, xmlend):
+                buffer = spblb_data[start.start():end.end()].replace(b"\t", b"").replace(b"\n", b"")
+                parser = ET.XMLParser(recover=True)
+                tree = ET.ElementTree(ET.fromstring(buffer, parser=parser))
+                plist_array.append(tree)
+            return plist_array
+        else:
+            return []
+
+    def code_signature_info(self):
+        """
+            Description: This method is for get information about code signature section
+            Usage: wm.code_signature_info()
+        """
+        # Locate LC_CODE_SIGNATURE
+        lc_code_signature_pattern = b'\x1d\x00\x00\x00\x10\x00\x00\x00'
+        cs_offset = list(re.finditer(lc_code_signature_pattern, self._target_binary_buffer))[0].start()
+
+        # Parse LC_CODE_SIGNATURE
+        self._fhandler.seek(cs_offset)
+        buffer = self._fhandler.read(16)
+
+        # Get dataoff
+        dataoff = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[16:24], 16)))
+
+        # Get datasize
+        datasize = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[24:32], 16)))
+
+        # Return value
+        report_cs = {"dataoff": dataoff, "datasize": datasize}
+        return report_cs
+
+    def application_identifier(self):
+        """
+            Description: This method returns application identifier name (For example "com.example.app")
+            Usage: wm.application_identifier()
+        """
+        # 1. We need to read _SC_SuperBlob
+        blob_data = self.dump_sc_superblob()
+
+        # Extract app_identifier
+        app_identifier = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), blob_data)[0]
+        return app_identifier.decode()
 
     def get_binary_info(self):
         """
