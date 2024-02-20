@@ -439,18 +439,21 @@ class Wh1teM0cha:
         """
         header_superblob = b'\xfa\xde\x0c\xc0'
 
-        # 1 find superblob header
-        sb_offset = list(re.finditer(header_superblob, self._target_binary_buffer))[-1].start()
+        try:
+            # Find superblob header
+            sb_offset = list(re.finditer(header_superblob, self._target_binary_buffer))[-1].start()
 
-        # Get length
-        self._fhandler.seek(sb_offset)
-        buffer = self._fhandler.read(16)
-        blob_length = binascii.hexlify(buffer)[8:16]
+            # Get length
+            self._fhandler.seek(sb_offset)
+            buffer = self._fhandler.read(16)
+            blob_length = binascii.hexlify(buffer)[8:16]
 
-        # Read sizeof(blob)
-        self._fhandler.seek(sb_offset)
-        sc_superblob_data = self._fhandler.read(int(blob_length, 16))
-        return sc_superblob_data
+            # Read sizeof(blob)
+            self._fhandler.seek(sb_offset)
+            sc_superblob_data = self._fhandler.read(int(blob_length, 16))
+            return sc_superblob_data
+        except:
+            raise Exception("No such load command -> _SC_SuperBlob")
 
     def get_plists(self):
         """
@@ -485,23 +488,26 @@ class Wh1teM0cha:
             Description: This method is for get information about code signature section
             Usage: wm.code_signature_info()
         """
-        # Locate LC_CODE_SIGNATURE
         lc_code_signature_pattern = b'\x1d\x00\x00\x00\x10\x00\x00\x00'
-        cs_offset = list(re.finditer(lc_code_signature_pattern, self._target_binary_buffer))[0].start()
+        try:
+            # Locate LC_CODE_SIGNATURE
+            cs_offset = list(re.finditer(lc_code_signature_pattern, self._target_binary_buffer))[0].start()
 
-        # Parse LC_CODE_SIGNATURE
-        self._fhandler.seek(cs_offset)
-        buffer = self._fhandler.read(16)
+            # Parse LC_CODE_SIGNATURE
+            self._fhandler.seek(cs_offset)
+            buffer = self._fhandler.read(16)
 
-        # Get dataoff
-        dataoff = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[16:24], 16)))
+            # Get dataoff
+            dataoff = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[16:24], 16)))
 
-        # Get datasize
-        datasize = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[24:32], 16)))
+            # Get datasize
+            datasize = binascii.hexlify(struct.pack("<I", int(binascii.hexlify(buffer)[24:32], 16)))
 
-        # Return value
-        report_cs = {"dataoff": dataoff, "datasize": datasize}
-        return report_cs
+            # Return value
+            report_cs = {"dataoff": dataoff, "datasize": datasize}
+            return report_cs
+        except:
+            raise Exception("No such load command -> LC_CODE_SIGNATURE")
 
     def application_identifier(self):
         """
@@ -514,6 +520,74 @@ class Wh1teM0cha:
         # Extract app_identifier
         app_identifier = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), blob_data)[0]
         return app_identifier.decode()
+
+    def get_entrypoint(self):
+        """
+            Description: This method returns entrypoint offset of the target binary
+            Usage: wm.get_entrypoint()
+        """
+        lc_main_pattern = b'\(\x00\x00\x80\x18\x00\x00\x00'
+        try:
+            # Locate LC_MAIN and read 16 bytes
+            entry_val = list(re.finditer(lc_main_pattern, self._target_binary_buffer))[0].start()
+            self._fhandler.seek(entry_val)
+            buffer = binascii.hexlify(self._fhandler.read(16))
+
+            # Parse buffer and get entryoff
+            entryoff = binascii.hexlify(struct.pack("<I", int(buffer[16:24], 16)))
+            return {"entryoff": entryoff}
+        except:
+            raise Exception("No such load command -> LC_MAIN")
+
+    def get_dyld_info(self):
+        """
+            Description: This method returns information about LC_DYLD_INFO[_ONLY]
+            Usage: wm.get_dyld_info()
+        """
+        lc_dyld_info_pattern = b'\"\x00\x00\x800\x00\x00\x00'
+        try:
+            # Return value
+            dyld_return_value = {
+                "rebase_off": None,
+                "rebase_size": None,
+                "bind_off": None,
+                "bind_size": None,
+                "weak_bind_off": None,
+                "weak_bind_size": None,
+                "lazy_bind_off": None,
+                "lazy_bind_size": None,
+                "export_off": None,
+                "export_size": None
+            }
+
+            # Locate LC_DYLD_INFO[_ONLY] and read 48 bytes of data
+            dyld_offset_start = list(re.finditer(lc_dyld_info_pattern, self._target_binary_buffer))[0].start()
+            self._fhandler.seek(dyld_offset_start)
+            buffer = binascii.hexlify(self._fhandler.read(48))
+
+            # Parse rebase zone
+            dyld_return_value["rebase_off"] = binascii.hexlify(struct.pack("<I", int(buffer[16:24], 16)))
+            dyld_return_value["rebase_size"] = binascii.hexlify(struct.pack("<I", int(buffer[24:32], 16)))
+
+            # Parse bind zone
+            dyld_return_value["bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[32:40], 16)))
+            dyld_return_value["bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[40:48], 16)))
+
+            # Parse weak_bind zone
+            dyld_return_value["weak_bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[48:56], 16)))
+            dyld_return_value["weak_bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[56:64], 16)))
+
+            # Parse lazy_bind zone
+            dyld_return_value["lazy_bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[64:72], 16)))
+            dyld_return_value["lazy_bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[72:80], 16)))
+
+            # Parse export zone
+            dyld_return_value["export_off"] = binascii.hexlify(struct.pack("<I", int(buffer[80:88], 16)))
+            dyld_return_value["export_size"] = binascii.hexlify(struct.pack("<I", int(buffer[88:96], 16)))
+
+            return dyld_return_value
+        except:
+            raise Exception("No such load command -> LC_DYLD_INFO[_ONLY]")
 
     def get_binary_info(self):
         """
