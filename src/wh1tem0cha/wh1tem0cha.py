@@ -589,6 +589,40 @@ class Wh1teM0cha:
         except:
             raise Exception("No such load command -> LC_DYLD_INFO[_ONLY]")
 
+    def get_symtab(self):
+        """
+            Description: This method returns information about LC_SYMTAB
+            Usage: wm.get_symtab()
+        """
+        lc_symtab_pattern = b'\x02\x00\x00\x00\x18\x00\x00\x00'
+        try:
+            # Return val
+            symtab_return = {
+                "symoff": None,
+                "nsyms": None,
+                "stroff": None,
+                "strsize": None
+            }
+            # Locate LC_SYMTAB and read 24 bytes of data
+            lc_symtab_offset_start = list(re.finditer(lc_symtab_pattern, self._target_binary_buffer))[0].start()
+            self._fhandler.seek(lc_symtab_offset_start)
+            buffer = binascii.hexlify(self._fhandler.read(24))
+
+            # Parse symoff
+            symtab_return["symoff"] = binascii.hexlify(struct.pack("<I", int(buffer[16:24], 16)))
+
+            # Parse nsyms
+            symtab_return["nsyms"] = binascii.hexlify(struct.pack("<I", int(buffer[24:32], 16)))
+
+            # Parse stroff
+            symtab_return["stroff"] = binascii.hexlify(struct.pack("<I", int(buffer[32:40], 16)))
+
+            # Parse strsize
+            symtab_return["strsize"] = binascii.hexlify(struct.pack("<I", int(buffer[40:48], 16)))
+            return symtab_return
+        except:
+            raise Exception("No such load command -> LC_SYMTAB")
+
     def get_binary_info(self):
         """
             Description: This method is for getting general information about the target binary
