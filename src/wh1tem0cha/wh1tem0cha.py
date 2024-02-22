@@ -427,6 +427,18 @@ class Wh1teM0cha:
         self._fhandler.seek(int(target_segment_info["offset"], 16)-0x8) # locate segment start
         return self._fhandler.read(int(target_segment_info["filesize"], 16))
 
+    def dump_section(self, section_name):
+        """
+            Description: This method is for dumping section data
+            Usage: wm.dump_section(section_name="__TEXT")
+        """
+        # We need section info first
+        target_section_info = self.section_info(section_name=section_name)
+
+        # Seek target offset and read sizeof(section) 
+        self._fhandler.seek(int(target_section_info["offset"], 16))
+        return self._fhandler.read(int(target_section_info["size"], 16))
+    
     def get_strings(self):
         """
             Description: This method is for dumping string values
