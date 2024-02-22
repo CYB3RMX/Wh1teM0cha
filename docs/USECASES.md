@@ -59,6 +59,17 @@ wm.section_info("__text")
 ```
 ![wm5](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/15555c54-bee2-4aa8-b649-5883f8148790)
 
+### Dump Section Buffer
+- <i>Description</i>: This method is for extracting content of the target section.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.dump_section("__text")
+```
+
+![wmm1](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/fbb65f74-4bf8-4214-8c2f-5ab92629ba41)
+
 ## Get DYLIB Information
 - <i>Description</i>: This method is for get all information about the Dynamic Libraries.<br>
 ```python
@@ -89,3 +100,83 @@ wm = Wh1teM0cha("target_binary_file")
 wm.get_strings()
 ```
 ![wm8](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/11de879f-a1f1-4e35-802d-4f6ceb9ace6e)
+
+## Gather Application Identifier
+- <i>Description</i>: This method returns application identifier name. (For example "com.example.app")<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.application_identifier()
+```
+
+![wmm2](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/cfe7e608-e955-49ec-acf3-96549038eff2)
+
+## Gather Code Signature Information
+- <i>Description</i>: This method is for getting information about code signature section.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.code_signature_info()
+```
+
+![wmm3](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/c345ac23-7a01-41d7-807a-ab6448d4f6a0)
+
+## Getting LC_SYMTAB Information
+- <i>Description</i>: This method returns information about LC_SYMTAB.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.get_symtab_info()
+```
+
+![wmm4](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/23b351ea-bca0-46e5-859e-feec4ca6c0a3)
+
+### List SYMTAB Strings
+- <i>Description</i>: This method returns string values contained in LC_SYMTAB.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.dump_symtab_strings()
+```
+
+![wmm5](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/4531b1ab-1121-4309-90ab-b2f468e9b017)
+
+## Gather Information About Dynamic Linking Editor (LC_DYLD_INFO)
+- <i>Description</i>: This method returns information about LC_DYLD_INFO.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.get_dyld_info()
+```
+
+![wmm7](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/c0cccf9c-7234-4abe-9e0a-7eb89ab513a1)
+
+## Parsing Property List Data
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+plist = wm.get_plists()
+
+for pl in plist[0].iter():
+    if pl.text:
+        print(pl.text)
+```
+
+![wmm8](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/2d517796-cfe2-46d5-bbbd-59aac9e28673)
+
+## Locating Entrypoint Offset
+- <i>Description</i>: This method returns entrypoint offset of the target binary.<br>
+```python
+from wh1tem0cha import Wh1teM0cha
+
+wm = Wh1teM0cha("target_binary_file")
+wm.get_entrypoint()
+```
+
+![wmm6](https://github.com/CYB3RMX/Wh1teM0cha/assets/42123683/a52d04e2-108a-4316-b6dd-47b7f71987e5)
