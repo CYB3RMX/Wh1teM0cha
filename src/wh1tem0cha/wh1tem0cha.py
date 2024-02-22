@@ -607,7 +607,7 @@ class Wh1teM0cha:
         except:
             raise Exception("No such load command -> LC_DYLD_INFO[_ONLY]")
 
-    def get_symtab(self):
+    def get_symtab_info(self):
         """
             Description: This method returns information about LC_SYMTAB
             Usage: wm.get_symtab()
@@ -640,6 +640,21 @@ class Wh1teM0cha:
             return symtab_return
         except:
             raise Exception("No such load command -> LC_SYMTAB")
+
+    def dump_symtab_strings(self):
+        """
+            Description: This method returns string values contained in LC_SYMTAB
+            Usage: wm.dump_symtab_strings()
+        """
+        # We need to locate offset start of the symtab strings
+        sym_inf = self.get_symtab_info()
+
+        # After that dump sizeof(symtab_strings_offset)
+        self._fhandler.seek(int(sym_inf["stroff"], 16))
+        buffer = self._fhandler.read(int(sym_inf["strsize"], 16))
+        str_vals = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), buffer)
+
+        return str_vals
 
     def get_binary_info(self):
         """
