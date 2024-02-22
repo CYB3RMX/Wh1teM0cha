@@ -396,9 +396,15 @@ class Wh1teM0cha:
         section_offset = binascii.hexlify(lend)
 
         # Get section size
-        tmp1 = binascii.hexlify(section_buffer)[80:88]
-        lend = struct.pack("<I", int(tmp1, 16))
-        section_size = binascii.hexlify(lend)
+        _ = self.get_binary_info()
+        if self._binary_info["arch"] != "multi":
+            tmp1 = binascii.hexlify(section_buffer)[80:88]
+            lend = struct.pack("<I", int(tmp1, 16))
+            section_size = binascii.hexlify(lend)
+        else:
+            tmp1 = binascii.hexlify(section_buffer)[72:80]
+            lend = struct.pack("<I", int(tmp1, 16))
+            section_size = binascii.hexlify(lend)
 
         # Return value
         section_info_report = {
