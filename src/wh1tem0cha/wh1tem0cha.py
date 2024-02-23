@@ -1,4 +1,4 @@
-# Wh1teM0cha: A Python Module for Mach-O Binary Parsing/Reverse Engineering
+# Wh1teM0cha: A Python Module for Mach-O Binary Parsing & Reverse Engineering
 # AUTHOR: Mehmet Ali Kerimoğlu @CYB3RMX / https://github.com/CYB3RMX
 # References => https://en.wikipedia.org/wiki/Mach-O
 #            => https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h
@@ -583,26 +583,14 @@ class Wh1teM0cha:
             self._fhandler.seek(dyld_offset_start)
             buffer = binascii.hexlify(self._fhandler.read(48))
 
-            # Parse rebase zone
-            dyld_return_value["rebase_off"] = binascii.hexlify(struct.pack("<I", int(buffer[16:24], 16)))
-            dyld_return_value["rebase_size"] = binascii.hexlify(struct.pack("<I", int(buffer[24:32], 16)))
-
-            # Parse bind zone
-            dyld_return_value["bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[32:40], 16)))
-            dyld_return_value["bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[40:48], 16)))
-
-            # Parse weak_bind zone
-            dyld_return_value["weak_bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[48:56], 16)))
-            dyld_return_value["weak_bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[56:64], 16)))
-
-            # Parse lazy_bind zone
-            dyld_return_value["lazy_bind_off"] = binascii.hexlify(struct.pack("<I", int(buffer[64:72], 16)))
-            dyld_return_value["lazy_bind_size"] = binascii.hexlify(struct.pack("<I", int(buffer[72:80], 16)))
-
-            # Parse export zone
-            dyld_return_value["export_off"] = binascii.hexlify(struct.pack("<I", int(buffer[80:88], 16)))
-            dyld_return_value["export_size"] = binascii.hexlify(struct.pack("<I", int(buffer[88:96], 16)))
-
+            # Parse buffer
+            buffer_index = 16
+            for key in dyld_return_value:
+                key_val = binascii.hexlify(struct.pack("<I", int(buffer[buffer_index:buffer_index+8], 16)))
+                dyld_return_value[key] = key_val
+                buffer_index = buffer_index+8
+                if buffer_index >= 96:
+                    break
             return dyld_return_value
         except:
             raise Exception("No such load command -> LC_DYLD_INFO[_ONLY]")
@@ -655,6 +643,52 @@ class Wh1teM0cha:
         str_vals = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), buffer)
 
         return str_vals
+
+    def get_dysymtab_info(self):
+        """
+            Description: This method returns information about LC_DYSYMTAB
+            Usage: wm.get_dysymtab_info()
+        """
+        lc_dysymtab_pattern = b'\x0b\x00\x00\x00P\x00\x00\x00'
+        try:
+            # Return value
+            dysymtab_return = {
+                "ilocalsym": None,
+                "nlocalsym": None,
+                "iextdefsym": None,
+                "nextdefsym": None,
+                "iundefsym": None,
+                "nundefsym": None,
+                "tocoff": None,
+                "ntoc": None,
+                "modtaboff": None,
+                "nmodtab": None,
+                "extrefsymoff": None,
+                "nextrefsyms": None,
+                "indirectsymoff": None,
+                "nindirectsyms": None,
+                "extreloff": None,
+                "nextrel": None,
+                "locreloff": None,
+                "nlocrel": None
+            }
+
+            # Locate LC_DYSYMTAB pattern and read 80 bytes of data
+            lc_dysymtab_offset = list(re.finditer(lc_dysymtab_pattern, self._target_binary_buffer))[0].start()
+            self._fhandler.seek(lc_dysymtab_offset)
+            buffer = binascii.hexlify(self._fhandler.read(80))
+
+            # Parse buffer
+            buffer_index = 16
+            for key in dysymtab_return:
+                key_val = binascii.hexlify(struct.pack("<I", int(buffer[buffer_index:buffer_index+8], 16)))
+                dysymtab_return[key] = key_val
+                buffer_index = buffer_index+8
+                if buffer_index >= 160:
+                    break
+            return dysymtab_return
+        except:
+            raise Exception("No such load command -> LC_DYSYMTAB")
 
     def get_binary_info(self):
         """
