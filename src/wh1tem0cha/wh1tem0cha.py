@@ -690,6 +690,33 @@ class Wh1teM0cha:
         except:
             raise Exception("No such load command -> LC_DYSYMTAB")
 
+    def get_data_in_code(self):
+        """
+            Description: This method returns information about LC_DATA_IN_CODE
+            Usage: wm.get_data_in_code()
+        """
+        lc_data_in_code_pattern = b'\\)\x00\x00\x00\x10\x00\x00\x00'
+        try:
+            # Return value
+            data_in_code_ret = {
+                "dataoff": None,
+                "datasize": None
+            }
+
+            # Locate LC_DATA_IN_CODE and read 16 bytes of data
+            lc_data_in_code_offset = list(re.finditer(lc_data_in_code_pattern, self._target_binary_buffer))[0].start()
+            self._fhandler.seek(lc_data_in_code_offset)
+            buffer = binascii.hexlify(self._fhandler.read(16))
+
+            # Parse "dataoff"
+            data_in_code_ret["dataoff"] = binascii.hexlify(struct.pack("<I", int(buffer[16:24], 16)))
+
+            # Parse "datasize"
+            data_in_code_ret["datasize"] = binascii.hexlify(struct.pack("<I", int(buffer[24:32], 16)))
+            return data_in_code_ret
+        except:
+            raise Exception("No such load command -> LC_DATA_IN_CODE")
+
     def get_binary_info(self):
         """
             Description: This method is for getting general information about the target binary
