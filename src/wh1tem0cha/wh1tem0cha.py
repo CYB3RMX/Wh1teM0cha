@@ -241,38 +241,41 @@ class Wh1teM0cha:
             # Hex pattern: cmd_header=>"0c000000" size=>"58000000" "1800000002000000"
             load_dylib_cmd_offset = re.finditer(b'\x0c\x00\x00\x00', self._target_binary_buffer)
             for mat in load_dylib_cmd_offset:
-                self._fhandler.seek(mat.start())
-                buffer = self._fhandler.read(16)
-                if b"0000001800000002" in binascii.hexlify(buffer): # Verify cmd
-                    # Get size
-                    cmdsize = int(binascii.hexlify(buffer)[2:10], 16)
+                try:
+                    self._fhandler.seek(mat.start())
+                    buffer = self._fhandler.read(16)
+                    if b"0000001800000002" in binascii.hexlify(buffer) or b"0000001800000000" in binascii.hexlify(buffer): # Verify cmd
+                        # Get size
+                        cmdsize = int(binascii.hexlify(buffer)[2:10], 16)
 
-                    # Read sizeof(cmdsize) and get lib name
-                    self._fhandler.seek(mat.start()) # return back to the target offset
-                    dylib_buffer = self._fhandler.read(cmdsize)
+                        # Read sizeof(cmdsize) and get lib name
+                        self._fhandler.seek(mat.start()) # return back to the target offset
+                        dylib_buffer = self._fhandler.read(cmdsize)
 
-                    # Timestamp extraction
-                    timestamp = binascii.hexlify(dylib_buffer)[18:26]
+                        # Timestamp extraction
+                        timestamp = binascii.hexlify(dylib_buffer)[18:26]
 
-                    # Current version extraction
-                    current_version_tmp = binascii.hexlify(dylib_buffer)[32:40]
-                    lend = struct.pack("<I", int(current_version_tmp, 16))
-                    current_version = binascii.hexlify(lend)
+                        # Current version extraction
+                        current_version_tmp = binascii.hexlify(dylib_buffer)[32:40]
+                        lend = struct.pack("<I", int(current_version_tmp, 16))
+                        current_version = binascii.hexlify(lend)
 
-                    # String extraction
-                    extracted_strings = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), dylib_buffer)
-                    if extracted_strings and extracted_strings[-1].decode() not in str(self._dylib_list):
-                        self._dylib_list.append(
-                            {
-                                "offset": hex(mat.start()),
-                                "cmd": "0xc",
-                                "cmdname": "LOAD_DYLIB",
-                                "cmdsize": hex(cmdsize),
-                                "timestamp": timestamp,
-                                "current_version": current_version,
-                                "libname": extracted_strings[-1]
-                            }
-                        )
+                        # String extraction
+                        extracted_strings = re.findall(r"[^\x00-\x1F\x7F-\xFF]{4,}".encode(), dylib_buffer)
+                        if extracted_strings and extracted_strings[-1].decode() not in str(self._dylib_list):
+                            self._dylib_list.append(
+                                {
+                                    "offset": hex(mat.start()),
+                                    "cmd": "0xc",
+                                    "cmdname": "LOAD_DYLIB",
+                                    "cmdsize": hex(cmdsize),
+                                    "timestamp": timestamp,
+                                    "current_version": current_version,
+                                    "libname": extracted_strings[-1]
+                                }
+                            )
+                except:
+                    continue
             return self._dylib_list
         else:
             return self._dylib_list
